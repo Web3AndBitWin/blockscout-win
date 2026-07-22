@@ -1,7 +1,36 @@
 version: "3.9"
 
 services:
+  db-init:
+    image: postgres:17-alpine
+    pull_policy: never
+
+  db:
+    image: postgres:17-alpine
+    pull_policy: never
+    command: ["postgres", "-c", "max_connections=300", "-c", "client_connection_check_interval=60000"]
+
+  redis-db:
+    image: redis:7-alpine
+    pull_policy: never
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   backend:
+    build:
+      args:
+        RELEASE_VERSION: "11.2.3"
+        BLOCKSCOUT_VERSION: AESC-11.2.3-local
+    image: blockscout-win/backend:aesc-devnet
+    pull_policy: never
+    depends_on:
+      db:
+        condition: service_healthy
+      redis-db:
+        condition: service_healthy
     environment:
       ETHEREUM_JSONRPC_VARIANT: geth
       ETHEREUM_JSONRPC_HTTP_URL: http://host.docker.internal:8545/
@@ -10,6 +39,15 @@ services:
       CHAIN_ID: "71602"
       COIN_NAME: AEX
       COIN: AEX
+      NETWORK: AESC
+      SUBNETWORK: AESC Devnet
+      FIRST_BLOCK: "1"
+      TRACE_FIRST_BLOCK: "1"
+      INDEXER_CATCHUP_BLOCKS_BATCH_SIZE: "50"
+      INDEXER_CATCHUP_BLOCKS_CONCURRENCY: "10"
+      INDEXER_DISABLE_INTERNAL_TRANSACTIONS_FETCHER: "true"
+      INDEXER_DISABLE_PENDING_TRANSACTIONS_FETCHER: "true"
+      DISABLE_WEBAPP: "true"
       MICROSERVICE_SC_VERIFIER_ENABLED: "false"
       MICROSERVICE_VISUALIZE_SOL2UML_ENABLED: "false"
       MICROSERVICE_SIG_PROVIDER_ENABLED: "false"
@@ -17,6 +55,9 @@ services:
       NFT_MEDIA_HANDLER_ENABLED: "false"
 
   frontend:
+    image: blockscout-win/frontend:aesc-devnet
+    pull_policy: never
+    platform: linux/arm64
     environment:
       NEXT_PUBLIC_NETWORK_NAME: AESC Devnet
       NEXT_PUBLIC_NETWORK_SHORT_NAME: AESC
@@ -26,3 +67,10 @@ services:
       NEXT_PUBLIC_NETWORK_CURRENCY_DECIMALS: "18"
       NEXT_PUBLIC_STATS_API_HOST: ""
       NEXT_PUBLIC_VISUALIZE_API_HOST: ""
+      NEXT_PUBLIC_PROMOTE_BLOCKSCOUT_IN_TITLE: "false"
+      NEXT_PUBLIC_HIDE_INDEXING_ALERT_BLOCKS: "true"
+      NEXT_PUBLIC_HIDE_INDEXING_ALERT_INT_TXS: "true"
+
+  proxy:
+    image: nginx:1.27-alpine
+    pull_policy: never

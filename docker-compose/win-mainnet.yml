@@ -1,0 +1,97 @@
+version: "3.9"
+
+services:
+  db-init:
+    image: postgres:17-alpine
+    pull_policy: never
+
+  db:
+    image: postgres:17-alpine
+    pull_policy: never
+    command: ["postgres", "-c", "max_connections=300", "-c", "client_connection_check_interval=60000"]
+
+  redis-db:
+    image: redis:7-alpine
+    pull_policy: never
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  backend:
+    build:
+      args:
+        RELEASE_VERSION: "11.2.3"
+        BLOCKSCOUT_VERSION: WIN-11.2.3-mainnet
+    image: blockscout-win/backend:win-mainnet
+    pull_policy: never
+    depends_on:
+      db:
+        condition: service_healthy
+      redis-db:
+        condition: service_healthy
+    environment:
+      ETHEREUM_JSONRPC_VARIANT: geth
+      ETHEREUM_JSONRPC_HTTP_URL: https://rpc2.eoeo.info
+      ETHEREUM_JSONRPC_TRACE_URL: https://rpc2.eoeo.info
+      ETHEREUM_JSONRPC_WS_URL: wss://rpc2.eoeo.info/ws
+      CHAIN_ID: "86233268"
+      COIN_NAME: WIN
+      COIN: WIN
+      NETWORK: WIN
+      SUBNETWORK: WIN Mainnet
+      FIRST_BLOCK: "1"
+      TRACE_FIRST_BLOCK: "1"
+      INDEXER_CATCHUP_BLOCKS_BATCH_SIZE: "50"
+      INDEXER_CATCHUP_BLOCKS_CONCURRENCY: "5"
+      INDEXER_DISABLE_INTERNAL_TRANSACTIONS_FETCHER: "true"
+      INDEXER_DISABLE_PENDING_TRANSACTIONS_FETCHER: "true"
+      DISABLE_WEBAPP: "true"
+      MICROSERVICE_SC_VERIFIER_ENABLED: "false"
+      MICROSERVICE_VISUALIZE_SOL2UML_ENABLED: "false"
+      MICROSERVICE_SIG_PROVIDER_ENABLED: "false"
+      MICROSERVICE_ACCOUNT_ABSTRACTION_ENABLED: "false"
+      NFT_MEDIA_HANDLER_ENABLED: "false"
+
+  frontend:
+    env_file: !reset []
+    build:
+      context: ../../frontend-win
+      dockerfile: Dockerfile
+      args:
+        GIT_TAG: WIN-mainnet
+        GIT_COMMIT_SHA: ${WIN_FRONTEND_GIT_COMMIT_SHA:-local-win-mainnet}
+    image: frontend-win:win-mainnet
+    pull_policy: never
+    platform: linux/arm64
+    environment:
+      NEXT_PUBLIC_API_HOST: localhost
+      NEXT_PUBLIC_API_PROTOCOL: http
+      NEXT_PUBLIC_API_BASE_PATH: /
+      NEXT_PUBLIC_API_WEBSOCKET_PROTOCOL: ws
+      NEXT_PUBLIC_APP_HOST: localhost
+      NEXT_PUBLIC_APP_PROTOCOL: http
+      NEXT_PUBLIC_NETWORK_NAME: WIN Mainnet
+      NEXT_PUBLIC_NETWORK_SHORT_NAME: WIN
+      NEXT_PUBLIC_NETWORK_ID: "86233268"
+      NEXT_PUBLIC_NETWORK_CURRENCY_NAME: WIN
+      NEXT_PUBLIC_NETWORK_CURRENCY_SYMBOL: WIN
+      NEXT_PUBLIC_NETWORK_CURRENCY_DECIMALS: "18"
+      NEXT_PUBLIC_IS_TESTNET: "false"
+      NEXT_PUBLIC_NETWORK_LOGO: file:///app/public/assets/favicon/logo-icon.png
+      NEXT_PUBLIC_NETWORK_LOGO_DARK: file:///app/public/assets/favicon/logo-icon.png
+      NEXT_PUBLIC_NETWORK_ICON: file:///app/public/assets/favicon/logo-icon.png
+      NEXT_PUBLIC_NETWORK_ICON_DARK: file:///app/public/assets/favicon/logo-icon.png
+      FAVICON_MASTER_URL: file:///app/public/assets/favicon/logo-icon.png
+      NEXT_PUBLIC_OG_DESCRIPTION: WIN Mainnet Explorer
+      NEXT_PUBLIC_HOMEPAGE_CHARTS: "[]"
+      NEXT_PUBLIC_STATS_API_HOST: ""
+      NEXT_PUBLIC_VISUALIZE_API_HOST: ""
+      NEXT_PUBLIC_PROMOTE_BLOCKSCOUT_IN_TITLE: "false"
+      NEXT_PUBLIC_HIDE_INDEXING_ALERT_BLOCKS: "true"
+      NEXT_PUBLIC_HIDE_INDEXING_ALERT_INT_TXS: "true"
+
+  proxy:
+    image: nginx:1.27-alpine
+    pull_policy: never

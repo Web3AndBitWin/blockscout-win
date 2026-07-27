@@ -3,7 +3,7 @@ FROM hexpm/elixir:1.19.4-erlang-27.3.4.6-alpine-3.22.2 AS builder-deps
 WORKDIR /app
 
 RUN apk --no-cache --update add \
-    alpine-sdk gmp-dev automake libtool inotify-tools autoconf python3 file gcompat libstdc++ curl ca-certificates git make bash
+    alpine-sdk gmp-dev automake libtool inotify-tools autoconf python3 file gcompat libstdc++ curl ca-certificates git make bash nodejs npm
 
 # Cache elixir deps
 COPY mix.exs mix.lock ./
@@ -22,6 +22,8 @@ RUN MIX_OS_DEPS_COMPILE_PARTITION_COUNT=$(nproc) mix do deps.get + local.rebar -
 COPY config ./config
 COPY rel ./rel
 COPY apps ./apps
+
+RUN cd apps/explorer && npm ci --omit=dev
 
 ##############################################################
 FROM builder-deps AS builder
@@ -60,7 +62,7 @@ ARG BLOCKSCOUT_GROUP=blockscout
 ARG BLOCKSCOUT_UID=10001
 ARG BLOCKSCOUT_GID=10001
 
-RUN apk --no-cache --update add jq curl && \
+RUN apk --no-cache --update add jq curl nodejs && \
     addgroup --system --gid ${BLOCKSCOUT_GID} ${BLOCKSCOUT_GROUP} && \
     adduser --system --uid ${BLOCKSCOUT_UID} --ingroup ${BLOCKSCOUT_GROUP} --disabled-password --home /app ${BLOCKSCOUT_USER}
 
@@ -90,6 +92,7 @@ COPY --from=builder --chown=${BLOCKSCOUT_USER}:${BLOCKSCOUT_GROUP} /opt/release/
 COPY --from=builder --chown=${BLOCKSCOUT_USER}:${BLOCKSCOUT_GROUP} /app/config/config_helper.exs ./config/config_helper.exs
 COPY --from=builder --chown=${BLOCKSCOUT_USER}:${BLOCKSCOUT_GROUP} /app/config/config_helper.exs /app/releases/${RELEASE_VERSION}/config_helper.exs
 COPY --from=builder --chown=${BLOCKSCOUT_USER}:${BLOCKSCOUT_GROUP} /app/config/assets/precompiles-arbitrum.json ./config/assets/precompiles-arbitrum.json
+COPY --from=builder --chown=${BLOCKSCOUT_USER}:${BLOCKSCOUT_GROUP} /app/apps/explorer/node_modules ./node_modules
 
 RUN mkdir dets && mkdir temp && chown -R ${BLOCKSCOUT_USER}:${BLOCKSCOUT_GROUP} /app
 

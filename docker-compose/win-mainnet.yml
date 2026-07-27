@@ -64,7 +64,7 @@ services:
         GIT_COMMIT_SHA: ${WIN_FRONTEND_GIT_COMMIT_SHA:-local-win-mainnet}
     image: frontend-win:win-mainnet
     pull_policy: never
-    platform: linux/arm64
+    platform: linux/amd64
     environment:
       NEXT_PUBLIC_API_HOST: localhost
       NEXT_PUBLIC_API_PROTOCOL: http

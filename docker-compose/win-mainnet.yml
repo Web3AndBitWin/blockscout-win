@@ -42,10 +42,15 @@ services:
       NETWORK: WIN
       SUBNETWORK: WIN Mainnet
       FIRST_BLOCK: "1"
-      TRACE_FIRST_BLOCK: "1"
+      # Trace only the existing Pancake V2 pair-creation block and future blocks.
+      # This avoids replaying the whole chain while retaining CREATE2 deployments.
+      TRACE_FIRST_BLOCK: "1236859"
+      TRACE_BLOCK_RANGES: "1236859,1242537..latest"
       INDEXER_CATCHUP_BLOCKS_BATCH_SIZE: "50"
       INDEXER_CATCHUP_BLOCKS_CONCURRENCY: "5"
-      INDEXER_DISABLE_INTERNAL_TRANSACTIONS_FETCHER: "true"
+      INDEXER_DISABLE_INTERNAL_TRANSACTIONS_FETCHER: "false"
+      INDEXER_INTERNAL_TRANSACTIONS_TRACER_TYPE: "call_tracer"
+      ETHEREUM_JSONRPC_GETH_TRACE_BY_BLOCK: "false"
       INDEXER_DISABLE_PENDING_TRANSACTIONS_FETCHER: "true"
       API_V1_WRITE_METHODS_DISABLED: "false"
       CONTRACT_VERIFICATION_MAX_LIBRARIES: "10"

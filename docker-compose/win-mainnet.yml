@@ -90,8 +90,8 @@ services:
       NEXT_PUBLIC_NETWORK_RPC_URL: https://rpc2.eoeo.info
       NEXT_PUBLIC_NETWORK_LOGO: file:///app/public/assets/win/winchain-logo.svg
       NEXT_PUBLIC_NETWORK_LOGO_DARK: file:///app/public/assets/win/winchain-logo.svg
-      NEXT_PUBLIC_NETWORK_ICON: file:///app/public/assets/win/winchain-logo.svg
-      NEXT_PUBLIC_NETWORK_ICON_DARK: file:///app/public/assets/win/winchain-logo.svg
+      NEXT_PUBLIC_NETWORK_ICON: file:///app/public/assets/win/winchain-icon.svg
+      NEXT_PUBLIC_NETWORK_ICON_DARK: file:///app/public/assets/win/winchain-icon.svg
       FAVICON_MASTER_URL: file:///app/public/assets/win/winchain-logo.svg
       NEXT_PUBLIC_AD_BANNER_PROVIDER: none
       NEXT_PUBLIC_AD_TEXT_PROVIDER: none

@@ -69,7 +69,7 @@ services:
       args:
         GIT_TAG: WIN-mainnet
         GIT_COMMIT_SHA: ${WIN_FRONTEND_GIT_COMMIT_SHA:-local-win-mainnet}
-    image: frontend-win:win-mainnet
+    image: frontend-win:${WIN_FRONTEND_IMAGE_TAG:-win-mainnet}
     pull_policy: never
     platform: linux/amd64
     environment:
@@ -87,6 +87,7 @@ services:
       NEXT_PUBLIC_NETWORK_CURRENCY_DECIMALS: "18"
       NEXT_PUBLIC_IS_TESTNET: "false"
       NEXT_PUBLIC_NETWORK_RPC_URL: https://rpc.winchain.win
+      NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID: ${NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID:?set in the deployment environment}
       NEXT_PUBLIC_NETWORK_LOGO: file:///app/public/assets/win/winchain-logo.svg
       NEXT_PUBLIC_NETWORK_LOGO_DARK: file:///app/public/assets/win/winchain-logo.svg
       NEXT_PUBLIC_NETWORK_ICON: file:///app/public/assets/win/winchain-icon.svg
